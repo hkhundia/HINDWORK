@@ -1,0 +1,6 @@
+"use client";import {useEffect,useState} from "react";import Link from "next/link";import Avatar from "../../components/Avatar";import Icon,{I} from "../../components/Icon";import {api,toPerson} from "../../lib/api";
+export default function Talent(){const [q,setQ]=useState("");const [l,setL]=useState(null);const [err,setErr]=useState("");
+useEffect(()=>{api("/freelancers/?q="+encodeURIComponent(q)).then(d=>{setL(d.map(toPerson));setErr("")}).catch(e=>setErr(e.message))},[q]);
+return(<><h1>Find talent</h1><div className="card"><input placeholder="Search by name, skill or city" value={q} onChange={e=>setQ(e.target.value)}/></div>{err&&<p className="err">{err}</p>}
+<div className="grid">{l?.map(p=>{const T=p.id<=4?Link:"div";return <T key={p.id} {...(p.id<=4?{href:`/freelancers/${p.id}`}:{})} className="card hov"><div className="row"><Avatar name={p.name} i={p.id} size={56}/><div><h3>{p.name}</h3><span className="mute row" style={{gap:4}}><Icon d={I.pin} size={14}/>{p.city||"India"}</span></div></div>
+<p className="row" style={{margin:"10px 0"}}><span className="gstar"><Icon d={I.star} size={16}/></span><b>{p.rating||"New"}</b><span className="mute">· ₹{p.rate}/hr</span></p>{p.skills.map(s=><span className="pill" key={s}>{s}</span>)}</T>})}</div>{l&&!l.length&&<p>No freelancers found. Try a different skill.</p>}</>)}
