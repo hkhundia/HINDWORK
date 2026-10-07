@@ -13,6 +13,10 @@ class Command(BaseCommand):
             u.set_password("demo1234"); u.save()
         J = [("rahul", "Logo for my bakery", "Design", 3000, 5, "Hindi", "logo,canva"), ("anita", "Hindi typing, 40 pages", "Typing", 1800, 3, "Hindi", "hindi typing"),
              ("karan", "Instagram reels editing", "Video", 5000, 7, "English", "video editing,reels"), ("meera", "Landing page in React", "Coding", 9000, 10, "English", "react,css")]
+        J += [("anita", "Hindi data entry, 500 rows", "Typing", 1500, 2, "Hindi", "hindi typing"), ("rahul", "Poster for Diwali sale", "Design", 1200, 2, "Hindi", "canva,photoshop"),
+              ("karan", "Product video edit", "Video", 4000, 5, "English", "video editing,premiere pro"), ("meera", "Fix bugs in React site", "Coding", 6000, 4, "English", "react,css"),
+              ("anita", "Packaging design for sweets", "Design", 3800, 6, "Hindi", "packaging,logo"), ("karan", "Translate website to Marathi", "Writing", 2600, 5, "Marathi", "translation,marathi"),
+              ("rahul", "Menu card design", "Design", 2200, 3, "Hindi", "canva,logo"), ("meera", "Next.js dashboard", "Coding", 12000, 12, "English", "next.js,react")]
         for e, t, c, b, d, l, s in J:
             Job.objects.get_or_create(title=t, defaults=dict(employer=E[e], description=t + ". Details shared after hiring.", category=c, budget=b, days=d, language=l, skills=s))
         self.stdout.write("Seeded. Login e.g. priya / demo1234 (freelancer), rahul / demo1234 (employer)")

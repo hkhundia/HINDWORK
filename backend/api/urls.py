@@ -9,5 +9,5 @@ urlpatterns = [
     path("contracts/", v.contracts), path("contracts/<int:pk>/review/", v.review),
     path("contracts/<int:pk>/pay/create/", v.pay_create), path("contracts/<int:pk>/pay/verify/", v.pay_verify),
     path("contracts/<int:pk>/<str:action>/", v.escrow_action),
-    path("freelancers/", v.freelancers), path("recommendations/jobs/", v.recommended_jobs), path("insights/", v.insights),
+    path("freelancers/", v.freelancers), path("recommendations/jobs/", v.recommended_jobs), path("insights/", v.insights), path("ai/price/", v.price_estimate),
 ]

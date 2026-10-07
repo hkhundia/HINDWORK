@@ -5,6 +5,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from .models import User, Job, Proposal, Contract, Transaction, Review
+from collections import Counter
+from . import ai
 from .serializers import *
 
 def err(msg, code=400):
@@ -165,16 +167,10 @@ def freelancers(request):
         qs = qs.filter(Q(username__icontains=q) | Q(skills__icontains=q) | Q(city__icontains=q))
     return Response(UserSerializer(qs, many=True).data)
 
-def match_pct(have, need):
-    if not need:
-        return 40
-    return min(99, 35 + round(65 * len(set(have) & set(need)) / len(set(need))))
-
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def recommended_jobs(request):
-    have = request.user.skill_list()
-    out = [dict(JobSerializer(j).data, match=match_pct(have, j.skill_list())) for j in Job.objects.filter(status="open")]
+    out = [dict(JobSerializer(j).data, match=m, why=w) for j, m, w in ai.rank_jobs(request.user, list(Job.objects.filter(status="open")))]
     return Response(sorted(out, key=lambda x: -x["match"]))
 
 @api_view(["GET"])
@@ -184,15 +180,36 @@ def job_matches(request, pk):
         job = Job.objects.get(pk=pk, employer=request.user)
     except Job.DoesNotExist:
         return err("Job not found.", 404)
-    need = job.skill_list()
-    out = [dict(UserSerializer(u).data, match=match_pct(u.skill_list(), need)) for u in User.objects.filter(role="freelancer")]
+    people = list(User.objects.filter(role="freelancer"))
+    ratings = {u.id: UserSerializer(u).data["rating"] for u in people}
+    out = [dict(UserSerializer(u).data, match=m, why=w) for u, m, w in ai.rank_people(job, people, ratings)]
     return Response(sorted(out, key=lambda x: -x["match"]))
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def insights(request):
-    rows = Job.objects.values("category").annotate(jobs=Count("id"), avg_budget=Avg("budget")).order_by("-jobs")
-    return Response([{"category": r["category"], "open_jobs": r["jobs"], "avg_budget": round(r["avg_budget"] or 0)} for r in rows])
+    open_ = list(Job.objects.filter(status="open"))
+    cats = Job.objects.filter(status="open").values("category").annotate(jobs=Count("id"), avg=Avg("budget")).order_by("-jobs")
+    skills, langs = Counter(s for j in open_ for s in j.skill_list()), Counter(j.language for j in open_)
+    tip, u = None, request.user
+    if u.is_authenticated and u.role == "freelancer":
+        gap = [(s, n) for s, n in skills.most_common() if s not in set(u.skill_list())][:2]
+        tip = ("In demand right now: " + ", ".join(f"{s} ({n} open job{'s' if n > 1 else ''})" for s, n in gap) + ". Adding them to your profile would unlock more matches.") if gap else "Your skills already cover the most in-demand work. Keep your profile fresh."
+    return Response({"total_open": len(open_), "tip": tip,
+                     "categories": [{"category": c["category"], "open_jobs": c["jobs"], "avg_budget": round(c["avg"] or 0)} for c in cats],
+                     "skills": [{"skill": s, "count": n} for s, n in skills.most_common(10)],
+                     "languages": [{"language": l, "count": n} for l, n in langs.most_common()]})
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def price_estimate(request):
+    p = request.query_params
+    need = {s.strip().lower() for s in p.get("skills", "").split(",") if s.strip()}
+    pool = [j for j in Job.objects.all() if j.category.lower() == p.get("category", "").lower()]
+    narrow = [j for j in pool if need & set(j.skill_list())]
+    level = "skills" if len(narrow) >= 3 else "category"
+    band = ai.price_band([j.budget for j in (narrow if level == "skills" else pool)])
+    return Response(dict(band, level=level) if band else {"based_on": len(pool), "level": level})
 
 # ---------- Razorpay (test mode) ----------
 def rzp_keys():
@@ -214,7 +231,7 @@ def pay_create(request, pk):
     kid, sec = rzp_keys()
     if not kid:
         return Response({"mode": "test"})
-    body = json.dumps({"amount": c.amount * 100, "currency": "INR", "receipt": f"kaamsetu-{c.id}"}).encode()
+    body = json.dumps({"amount": c.amount * 100, "currency": "INR", "receipt": f"hindwork-{c.id}"}).encode()
     auth = base64.b64encode(f"{kid}:{sec}".encode()).decode()
     req = urllib.request.Request("https://api.razorpay.com/v1/orders", data=body, headers={"Content-Type": "application/json", "Authorization": "Basic " + auth})
     try:

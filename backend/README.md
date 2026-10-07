@@ -1,4 +1,4 @@
-# KaamSetu backend (Django + DRF)
+# HindWork backend (Django + DRF)
 ```
 python -m venv venv && venv\Scripts\activate      # Windows
 pip install -r requirements.txt
@@ -24,3 +24,10 @@ Auth: `Authorization: Token <token>` (from /api/auth/register/ or /api/auth/logi
 
 Escrow stages: hired -> (employer deposit) funded -> (freelancer start) working -> (freelancer deliver) delivered -> (employer approve) paid. Dispute freezes funded/working/delivered. Payments are TEST mode; replace the `deposit` and `approve` blocks in views.py with Razorpay.
 Admin panel: create superuser with `python manage.py createsuperuser`, open /admin/.
+
+## Razorpay test checkout
+Without keys, deposit runs in simulated test mode. With keys, the Pay button opens real Razorpay checkout and the backend verifies the signature.
+```
+$env:RAZORPAY_KEY_ID="rzp_test_xxxx"; $env:RAZORPAY_KEY_SECRET="xxxx"   # PowerShell, same window as runserver
+python manage.py makemigrations api; python manage.py migrate; python manage.py runserver
+```
