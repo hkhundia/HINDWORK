@@ -90,3 +90,8 @@ button.sug{padding:4px 12px;font-size:13px;border-radius:99px}.btn.big{width:100
 .vd{font-weight:800;margin:0}.vd.fair{color:var(--ok)}.vd.low,.vd.high{color:#B34F00}
 button.sug{padding:4px 12px;font-size:13px;border-radius:99px}.card.tip{background:var(--soft)}
 @media(max-width:860px){.twocol{grid-template-columns:1fr}.side{position:static}}
+
+/* ---- hero first-impression fixes ---- */
+.hi1{font-size:clamp(46px,6.4vw,88px)!important;line-height:1.14!important;margin:14px 0 14px!important}
+.hero .btn.white{background:#fff}.trust{display:flex;gap:16px;flex-wrap:wrap;margin-top:18px;font-weight:700;font-size:14px}
+.heroR{align-self:center}
