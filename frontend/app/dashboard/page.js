@@ -1,10 +1,17 @@
-"use client";import {useEffect,useState} from "react";import Link from "next/link";import {api,auth} from "../../lib/api";
+"use client";import {useEffect,useState} from "react";import Link from "next/link";import {api,auth} from "../../lib/api";import Avatar from "../../components/Avatar";import Icon,{I} from "../../components/Icon";
 const S=["hired","funded","working","delivered","paid"],L=["Hired","Funded","Working","Delivered","Paid"];
-export default function Dash(){const [cs,setCs]=useState(null);const [err,setErr]=useState("");const [me,setMe]=useState(null);
-useEffect(()=>{setMe(auth.user());api("/contracts/").then(setCs).catch(e=>setErr(e.message))},[]);
-if(err)return <p className="err">{err} <Link href="/login">Log in</Link></p>;if(!cs)return <p>Loading...</p>;
-const sum=f=>cs.filter(f).reduce((a,c)=>a+c.amount,0);
-return(<><h1>My projects{me&&<span className="pill" style={{marginLeft:10}}>{me.username} · {me.role}</span>}</h1><div className="grid">{[["Active",cs.filter(c=>c.stage!=="paid").length],["In escrow","₹"+sum(c=>["funded","working","delivered"].includes(c.stage)).toLocaleString("en-IN")],["Paid out","₹"+sum(c=>c.stage==="paid").toLocaleString("en-IN")]].map(([a,b])=><div className="card" key={a}><div className="mute">{a}</div><h2>{b}</h2></div>)}</div>
-{cs.map(c=>{const i=S.indexOf(c.stage);return <div className="card" key={c.id}><h3>{c.job_title} · ₹{c.amount}</h3><div className="steps">{L.map((x,k)=><div key={x} className={"st "+(c.stage==="paid"||k<i?"d":k===i?"c":"")}>{x}</div>)}</div><Link className="btn sm" href={`/escrow?id=${c.id}`}>Open escrow</Link></div>})}
-{!cs.length&&<div className="card"><p>No projects yet. Employers: open a job and hire from its proposals. Freelancers: send a proposal.</p><Link className="btn" href="/jobs">Browse jobs</Link></div>}
-<div className="card"><b>AI insight:</b> Design jobs rose 18% this month. Adding "packaging" could raise your rate by about ₹100/hr.</div></>)}
+const HINT={hired:["employer","Deposit the payment to begin"],funded:["freelancer","Payment is secured. Start the work"],working:["freelancer","Deliver the work when it is ready"],delivered:["employer","Review the work and release payment"]};
+export default function Dash(){const [cs,setCs]=useState(null);const [err,setErr]=useState("");const [me,setMe]=useState(null);const [tip,setTip]=useState("");
+useEffect(()=>{setMe(auth.user());api("/contracts/").then(setCs).catch(e=>setErr(e.message));api("/insights/").then(d=>setTip(d.tip||"")).catch(()=>{})},[]);
+if(err)return <div className="card"><h2>Please log in</h2><p className="err">{err}</p><Link className="btn" href="/login">Log in</Link></div>;if(!cs)return <p>Loading...</p>;
+const sum=f=>cs.filter(f).reduce((a,c)=>a+c.amount,0),inr=n=>"₹"+n.toLocaleString("en-IN"),emp=me?.role==="employer";
+return(<><div className="pg-head"><Avatar name={me?.username||"U"} size={64}/><div style={{flex:1}}><h1 style={{margin:0}}>Namaste, {me?.username||"friend"} 👋</h1><p className="mute" style={{margin:0}}>{emp?"Manage your hires and payments in one place.":"Track your work and earnings in one place."}</p></div>
+<Link className="btn" href={emp?"/post":"/jobs"}>{emp?"+ Post a job":"Find work"}</Link></div>
+<div className="grid">{[["k1","Active projects",cs.filter(c=>c.stage!=="paid").length,I.clock],["k2","Held in escrow",inr(sum(c=>["funded","working","delivered"].includes(c.stage))),I.shield],["k3",emp?"Total paid":"Total earned",inr(sum(c=>c.stage==="paid")),I.check]].map(([k,a,b,d])=><div className={"kpi "+k} key={a}><span className="ki"><Icon d={d} size={22}/></span><div><div className="mute">{a}</div><h2 style={{margin:0}}>{b}</h2></div></div>)}</div>
+{tip&&<div className="card tip">✦ <b>AI insight:</b> {tip}</div>}
+<h2 style={{marginTop:28}}>Your projects</h2>
+{cs.map(c=>{const i=S.indexOf(c.stage),h=HINT[c.stage],mine=h&&me?.role===h[0];return <div className="card proj" key={c.id}><div className="row" style={{justifyContent:"space-between"}}><div><h3>{c.job_title}</h3><span className="mute">{inr(c.amount)} · Contract #{c.id}</span></div>
+<span className={"badge "+(c.stage==="paid"?"ok":c.stage==="disputed"?"bad":"")}>{c.stage==="disputed"?"Disputed":L[i]}</span></div>
+<div className="prog"><i style={{width:c.stage==="disputed"?"100%":`${(i+1)*20}%`}} className={c.stage==="disputed"?"bad":""}/></div>
+<div className="row" style={{justifyContent:"space-between"}}><span className={mine?"why":"mute"}>{c.stage==="paid"?"Completed. Payment released.":c.stage==="disputed"?"Frozen until an admin decides.":mine?"👉 Your turn: "+h[1]:"Waiting for the "+(h?h[0]:"other side")}</span><Link className="btn sm" href={`/escrow?id=${c.id}`}>Open escrow</Link></div></div>})}
+{!cs.length&&<div className="card empty"><div style={{fontSize:44}}>🌉</div><h3>No projects yet</h3><p className="mute">{emp?"Post a job, then hire a freelancer from the proposals.":"Find a job and send your first proposal."}</p><Link className="btn" href={emp?"/post":"/jobs"}>{emp?"Post your first job":"Browse jobs"}</Link></div>}</>)}

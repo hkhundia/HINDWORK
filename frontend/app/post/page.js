@@ -1,11 +1,20 @@
-"use client";import {useState} from "react";import {api} from "../../lib/api";import Link from "next/link";
-export default function Post(){const [f,setF]=useState({title:"",description:"",category:"Design",budget:3000,days:5,language:"Hindi",skills:""});const [err,setErr]=useState("");
-const set=k=>e=>setF({...f,[k]:e.target.value});const fair=f.budget>=2500&&f.budget<=4500;
-async function pub(){try{const d=await api("/jobs/",{method:"POST",body:{...f,budget:+f.budget,days:+f.days}});location.href=`/jobs/${d.id}`}catch(e){setErr(e.message)}}
-return(<><h1>Post a job</h1><div className="card"><button className="btn alt" onClick={()=>alert("Voice input: connect the Web Speech API (hi-IN) here")}>🎙 Speak in Hindi</button>
-<label>Title</label><input value={f.title} onChange={set("title")} placeholder="Logo for my bakery"/><label>Describe the work</label><textarea rows={3} value={f.description} onChange={set("description")}/>
-<div className="row"><div style={{flex:1}}><label>Budget (₹)</label><input type="number" value={f.budget} onChange={set("budget")}/></div><div style={{flex:1}}><label>Days</label><input type="number" value={f.days} onChange={set("days")}/></div></div>
+"use client";import {useState,useEffect} from "react";import Link from "next/link";import {api} from "../../lib/api";import JobCard from "../../components/JobCard";
+const SUG=["logo","canva","react","hindi typing","video editing","translation"];
+export default function Post(){const [f,setF]=useState({title:"",description:"",category:"Design",budget:3000,days:5,language:"Hindi",skills:""});const [err,setErr]=useState("");const [est,setEst]=useState(null);const [busy,setBusy]=useState(false);
+const set=k=>e=>setF({...f,[k]:e.target.value});
+useEffect(()=>{const t=setTimeout(()=>{api(`/ai/price/?category=${f.category}&skills=${encodeURIComponent(f.skills)}`).then(setEst).catch(()=>setEst(null))},400);return()=>clearTimeout(t)},[f.category,f.skills]);
+const b=+f.budget,has=est?.low,lo=has?Math.min(est.low*.5,b):0,hi=has?Math.max(est.high*1.5,b):1,pos=v=>`${Math.max(0,Math.min(100,(v-lo)/(hi-lo)*100))}%`;
+const verdict=!has?"":b<est.low?["low","A bit low. You may get fewer proposals."]:b>est.high?["high","Above the usual range. Expect strong proposals."]:["fair","A fair budget for this kind of work."];
+const addSkill=s=>{const a=f.skills.split(",").map(x=>x.trim()).filter(Boolean);if(!a.includes(s))setF({...f,skills:[...a,s].join(", ")})};
+async function pub(){setBusy(true);setErr("");try{const d=await api("/jobs/",{method:"POST",body:{...f,budget:b,days:+f.days}});location.href=`/jobs/${d.id}`}catch(e){setErr(e.message)}setBusy(false)}
+const prev={id:0,title:f.title||"Your job title",desc:f.description||"Your description will appear here.",budget:b||0,days:f.days,by:"you",cat:f.category,lang:f.language};
+return(<><div className="pg-head"><div style={{flex:1}}><h1 style={{margin:0}}>Post a job</h1><p className="mute" style={{margin:0}}>Describe the work, set a fair budget, and get proposals.</p></div><button type="button" className="btn alt" onClick={()=>alert("Voice input: connect the Web Speech API (hi-IN) here")}>🎙 Speak in Hindi</button></div>
+<div className="twocol"><div className="card"><label>Job title</label><input value={f.title} onChange={set("title")} placeholder="e.g. Logo for my bakery"/><label>What needs to be done?</label><textarea rows={4} value={f.description} onChange={set("description")} placeholder="Describe the work, style and any examples."/>
 <div className="row"><div style={{flex:1}}><label>Category</label><select value={f.category} onChange={set("category")}>{["Design","Typing","Video","Coding","Writing"].map(c=><option key={c}>{c}</option>)}</select></div><div style={{flex:1}}><label>Language</label><select value={f.language} onChange={set("language")}>{["Hindi","English","Marathi"].map(c=><option key={c}>{c}</option>)}</select></div></div>
-<label>Skills needed (comma separated)</label><input value={f.skills} onChange={set("skills")} placeholder="logo, canva"/>
-<p className="pill" style={{marginTop:12}}>AI price check: similar jobs cost ₹2,500 to ₹4,500. {fair?"Your budget is fair.":"Your budget is outside the usual range."}</p>
-{err&&<p className="err">{err} {err.includes("Authentication")&&<Link href="/login">Log in as an employer</Link>}</p>}<p><button className="btn" onClick={pub}>Publish job</button></p></div></>)}
+<label>Skills needed</label><input value={f.skills} onChange={set("skills")} placeholder="logo, canva"/><div className="row" style={{gap:6,marginTop:6}}>{SUG.map(s=><button type="button" className="sug" key={s} onClick={()=>addSkill(s)}>+ {s}</button>)}</div>
+<div className="row"><div style={{flex:1}}><label>Budget (₹)</label><input type="number" value={f.budget} onChange={set("budget")}/></div><div style={{flex:1}}><label>Deadline (days)</label><input type="number" value={f.days} onChange={set("days")}/></div></div>
+{err&&<p className="err">{err} {err.includes("Authentication")&&<Link href="/login">Log in as an employer</Link>}</p>}<p><button className="btn big" disabled={busy||!f.title||!f.description} onClick={pub}>{busy?"Publishing...":"Publish job"}</button></p></div>
+<div className="side"><div className="card"><h3>✦ AI price check</h3>{has?<><p className="mute">Similar jobs cost <b>₹{est.low.toLocaleString("en-IN")}</b> to <b>₹{est.high.toLocaleString("en-IN")}</b> (median ₹{est.median.toLocaleString("en-IN")}, from {est.based_on} jobs).</p>
+<div className="pm"><i style={{left:pos(est.low),width:`calc(${pos(est.high)} - ${pos(est.low)})`}}/><b style={{left:pos(b)}}/></div><p className={"vd "+verdict[0]}>{verdict[1]}</p></>:<p className="mute">Not enough similar jobs yet to estimate a price.</p>}</div>
+<h3 style={{marginTop:16}}>How freelancers will see it</h3><div style={{pointerEvents:"none"}}><JobCard j={prev}/></div>
+<div className="card tip">🔒 Your payment is held in escrow and released only when you approve the work.</div></div></div></>)}
