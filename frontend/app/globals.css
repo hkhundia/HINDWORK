@@ -127,3 +127,9 @@ footer{background:transparent;color:var(--mute)}footer b{color:var(--ink)}.banne
 .duo{display:grid;grid-template-columns:1fr 1fr;gap:16px}.duo b{display:block;font-size:30px;color:var(--acc);line-height:1.1}.duo span{color:var(--mute);font-size:14px}.duo .prog{margin:8px 0 0}
 .gauge{position:relative}.gauge svg{width:100%;height:100%}.g0,.g1{fill:none;stroke-width:12;stroke-linecap:round}.g0{stroke:rgba(255,255,255,.1)}.g1{stroke:var(--acc)}.gt{position:absolute;inset:0;display:grid;place-content:center;text-align:center}.gt b{font-size:28px;line-height:1}.gt small{color:var(--mute);font-size:11px}
 @media(max-width:860px){.bento,.bento2{grid-template-columns:1fr}.bh{grid-row:auto;padding:24px}.links{display:flex;order:3;width:100%;overflow-x:auto}.navin{border-radius:24px}}
+/* ---- fixes after visual review ---- */
+html{background:var(--bg)}body{min-height:100vh;background-repeat:no-repeat;background-attachment:fixed}
+.navin{max-width:1180px;flex-wrap:nowrap;gap:10px}.links{gap:2px;flex-wrap:nowrap}.links a{padding:7px 12px;font-size:14px;white-space:nowrap}
+.navin .row{flex-wrap:nowrap;gap:8px;white-space:nowrap}.navin .row b{font-size:14px}.navin .row .pill{margin:0;font-size:11px}.navin .row button{padding:5px 12px;font-size:13px;border-radius:99px}
+.grid{margin-bottom:16px}.btn.big{margin-top:12px}footer{border-top:0}
+@media(max-width:1000px){.navin{flex-wrap:wrap}.links{order:3;width:100%;overflow-x:auto}}
