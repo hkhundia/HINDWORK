@@ -133,3 +133,6 @@ html{background:var(--bg)}body{min-height:100vh;background-repeat:no-repeat;back
 .navin .row{flex-wrap:nowrap;gap:8px;white-space:nowrap}.navin .row b{font-size:14px}.navin .row .pill{margin:0;font-size:11px}.navin .row button{padding:5px 12px;font-size:13px;border-radius:99px}
 .grid{margin-bottom:16px}.btn.big{margin-top:12px}footer{border-top:0}
 @media(max-width:1000px){.navin{flex-wrap:wrap}.links{order:3;width:100%;overflow-x:auto}}
+/* ---- no-demo cleanup ---- */
+ol.how{margin:10px 0 0;padding-left:22px}.how li{margin:9px 0;color:var(--mute)}.how li::marker{color:var(--acc);font-weight:800}
+.cl-perks{position:absolute;z-index:4;left:26px;right:26px;bottom:26px;background:rgba(255,255,255,.95);color:#14110F;border-radius:20px;padding:18px 20px;box-shadow:0 12px 28px rgba(0,0,0,.25)}.cl-perks p{margin:7px 0 0;font-size:14px}

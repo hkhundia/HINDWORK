@@ -1,3 +1,0 @@
-"use client";import {useEffect,useState} from "react";import Icon from "./Icon";
-export default function Float(){const [n,setN]=useState("");useEffect(()=>{const u=()=>setN(new Date().toLocaleString("en-IN",{weekday:"short",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}));u();const i=setInterval(u,30000);return()=>clearInterval(i)},[]);
-return(<><div className="clock"><b>{n}</b><span><i/> India</span></div><div className="fab">{[["Chat on WhatsApp","M4 20l1.5-4A8 8 0 1112 20a8 8 0 01-4-1z"],["Email us","M3 6h18v12H3zM3 7l9 7 9-7"],["Help","M12 17v.5M9.5 9a2.5 2.5 0 115 0c0 2-2.5 2-2.5 4"]].map(([l,d])=><a key={l} href="#" aria-label={l}><Icon d={d} size={20}/></a>)}</div></>)}

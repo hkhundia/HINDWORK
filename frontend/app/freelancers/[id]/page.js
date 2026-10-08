@@ -1,7 +1,9 @@
-import {people} from "../../../lib/data";import Link from "next/link";import Avatar from "../../../components/Avatar";import Icon,{I} from "../../../components/Icon";
-export default function Profile({params}){const p=people.find(x=>x.id==params.id);if(!p)return <p>Profile not found.</p>;
-return(<><div className="banner"/><div className="card prof"><div className="row" style={{alignItems:"flex-end"}}><Avatar name={p.name} i={p.id} size={92}/><div style={{flex:1}}><h1>{p.name} <span className="pill gold"><Icon d={I.check} size={13}/> Verified</span></h1><span className="mute">{p.city} · {p.langs.join(", ")}</span></div><Link className="btn alt" href="/post">Invite to job</Link></div>
-<div className="stats3">{[[`★ ${p.rating}`,`${p.reviews} reviews`],[`${p.ontime}%`,"On time"],[`₹${p.rate}`,"Per hour"]].map(([a,b])=><div key={b}><b>{a}</b><span>{b}</span></div>)}</div></div>
-<div className="card"><h3>Skills</h3>{p.skills.map(s=><span className="pill" key={s}>{s}</span>)}</div>
-<h3>Portfolio</h3><div className="grid">{p.work.map((w,i)=><div className="card port" key={w}><div className={"thumb t"+(i%3)}/><b>{w}</b></div>)}</div>
-<div className="card"><h3>Latest review</h3><p className="gstar">★★★★★</p><p>"{p.review}"</p></div></>)}
+"use client";import {useEffect,useState} from "react";import {useParams} from "next/navigation";import Link from "next/link";import {api,auth,toPerson} from "../../../lib/api";import Avatar from "../../../components/Avatar";
+export default function Profile(){const {id}=useParams();const [p,setP]=useState(null);const [err,setErr]=useState("");const [me,setMe]=useState(null);
+useEffect(()=>{setMe(auth.user());api(`/freelancers/${id}/`).then(d=>setP({...toPerson(d),completed:d.completed,reviews:d.reviews,count:d.review_count})).catch(e=>setErr(e.message))},[id]);
+if(err)return <div className="card empty"><h3>Profile not found</h3><p className="mute">{err}</p><Link className="btn" href="/freelancers">Browse freelancers</Link></div>;if(!p)return <p>Loading...</p>;
+return(<><div className="banner"/><div className="card prof"><div className="row" style={{alignItems:"flex-end"}}><Avatar name={p.name} i={p.id} size={92}/><div style={{flex:1}}><h1 style={{margin:0}}>{p.name}</h1><span className="mute">{p.city||"India"} · {p.language}</span></div>{me?.role==="employer"&&<Link className="btn" href="/post">Post a job</Link>}</div>
+<div className="stats3">{[[p.rating?`★ ${p.rating}`:"New",`${p.count} review${p.count===1?"":"s"}`],[p.completed,"Jobs completed"],[p.rate?`₹${p.rate}`:"–","Per hour"]].map(([a,b])=><div key={b}><b>{a}</b><span>{b}</span></div>)}</div></div>
+<div className="card"><h3>About</h3><p>{p.bio||"This freelancer hasn't added a bio yet."}</p></div>
+<div className="card"><h3>Skills</h3>{p.skills.length?p.skills.map(s=><span className="pill" key={s}>{s}</span>):<p className="mute">No skills listed yet.</p>}</div>
+<div className="card"><h3>Reviews</h3>{p.reviews.length?p.reviews.map((r,i)=><div key={i} style={{padding:"8px 0",borderBottom:"1px solid var(--line)"}}><span className="gstar">{"★".repeat(r.rating)}</span> <b>{r.from}</b><p className="mute" style={{margin:0}}>{r.comment}</p></div>):<p className="mute">No reviews yet. Reviews appear after a job is completed and paid.</p>}</div></>)}

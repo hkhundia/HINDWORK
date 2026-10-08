@@ -1,6 +1,0 @@
-"use client";import {useState} from "react";import Link from "next/link";import {api} from "../../../lib/api";
-export default function Proposal({id,budget,days}){const [p,setP]=useState(budget);const [d,setD]=useState(days);const [m,setM]=useState("I have done similar work. Happy to share samples.");const [sent,setSent]=useState(false);const [err,setErr]=useState("");
-async function send(){try{await api(`/jobs/${id}/proposals/`,{method:"POST",body:{price:+p,days:+d,message:m}});setSent(true)}catch(e){setErr(e.message)}}
-if(sent)return <div className="card"><h3>Proposal sent</h3><p className="mute">The employer will review it.</p><Link className="btn" href="/dashboard">Go to dashboard</Link></div>;
-return(<div className="card"><h3>Your proposal</h3><div className="row"><div style={{flex:1}}><label>Price (₹)</label><input value={p} onChange={e=>setP(e.target.value)}/></div><div style={{flex:1}}><label>Days</label><input value={d} onChange={e=>setD(e.target.value)}/></div></div>
-<label>Message</label><textarea rows={3} value={m} onChange={e=>setM(e.target.value)}/>{err&&<p className="err">{err} {err.includes("Authentication")&&<Link href="/login">Log in</Link>}</p>}<p><button className="btn" onClick={send}>Send proposal</button></p></div>)}

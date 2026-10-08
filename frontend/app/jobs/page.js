@@ -3,7 +3,7 @@ export default function Jobs(){const [q,setQ]=useState("");const [cat,setCat]=us
 useEffect(()=>{setQ(new URLSearchParams(location.search).get("q")||"")},[]);
 useEffect(()=>{const p=new URLSearchParams();if(q)p.set("q",q);if(cat!=="All")p.set("category",cat);if(lang!=="All")p.set("language",lang);if(max)p.set("max_budget",max);
 const u=auth.user();const rec=u&&u.role==="freelancer"?api("/recommendations/jobs/").catch(()=>[]):Promise.resolve([]);
-Promise.all([api("/jobs/?"+p),rec]).then(([d,r])=>{const m={};r.forEach(x=>m[x.id]=x.match);setList(d.map(toJob).map(j=>m[j.id]?{...j,match:m[j.id]}:j).sort((a,b)=>(b.match||0)-(a.match||0)));setErr("")}).catch(e=>setErr(e.message))},[q,cat,lang,max]);
+Promise.all([api("/jobs/?"+p),rec]).then(([d,r])=>{const m={};r.forEach(x=>m[x.id]=x);setList(d.map(toJob).map(j=>m[j.id]?{...j,match:m[j.id].match,why:m[j.id].why}:j).sort((a,b)=>(b.match||0)-(a.match||0)));setErr("")}).catch(e=>setErr(e.message))},[q,cat,lang,max]);
 return(<><h1>Find work</h1><div className="card row"><input style={{flex:2,minWidth:180}} placeholder="Search jobs" value={q} onChange={e=>setQ(e.target.value)}/>
 <select style={{flex:1}} value={cat} onChange={e=>setCat(e.target.value)}>{["All","Design","Typing","Video","Coding","Writing"].map(c=><option key={c}>{c}</option>)}</select>
 <select style={{flex:1}} value={lang} onChange={e=>setLang(e.target.value)}>{["All","Hindi","English","Marathi"].map(c=><option key={c}>{c}</option>)}</select>

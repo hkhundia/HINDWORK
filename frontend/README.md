@@ -1,4 +1,4 @@
-# KaamSetu frontend (Next.js 14, App Router)
+# HindWork frontend (Next.js 14, App Router)
 ```
 npm install
 npm run dev   # http://localhost:3000
