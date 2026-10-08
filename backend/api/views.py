@@ -1,5 +1,5 @@
 import uuid, os, json, hmac, hashlib, base64, urllib.request
-from django.db.models import Q, Avg, Count
+from django.db.models import Q, Avg, Count, Sum
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
@@ -256,3 +256,22 @@ def pay_verify(request, pk):
     Transaction.objects.create(contract=c, kind="deposit", amount=c.amount, gateway_ref=pid)
     c.stage = "funded"; c.save()
     return Response(ContractSerializer(c).data)
+
+# ---------- real platform data (no demo content) ----------
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def stats(request):
+    paid = Transaction.objects.filter(kind="release").aggregate(s=Sum("amount"))["s"] or 0
+    return Response({"freelancers": User.objects.filter(role="freelancer").count(), "employers": User.objects.filter(role="employer").count(),
+                     "open_jobs": Job.objects.filter(status="open").count(), "completed_jobs": Job.objects.filter(status="completed").count(), "paid_total": paid})
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def freelancer_detail(request, pk):
+    try:
+        u = User.objects.get(pk=pk, role="freelancer")
+    except User.DoesNotExist:
+        return err("Freelancer not found.", 404)
+    revs = Review.objects.filter(to_user=u).select_related("from_user").order_by("-id")
+    return Response(dict(UserSerializer(u).data, completed=Contract.objects.filter(freelancer=u, stage="paid").count(), review_count=revs.count(),
+                         reviews=[{"rating": r.rating, "comment": r.comment, "from": r.from_user.username} for r in revs[:20]]))

@@ -3,7 +3,13 @@ from api.models import User, Job
 
 class Command(BaseCommand):
     help = "Create demo users and jobs (password for all: demo1234)"
+    def add_arguments(self, p):
+        p.add_argument("--demo", action="store_true", help="Confirms you want FAKE demo data (local test databases only)")
+
     def handle(self, *a, **k):
+        if not k.get("demo"):
+            self.stdout.write("Refusing to seed: this creates FAKE demo users with a known password. Use --demo only on a local test database.")
+            return
         F = [("priya", "Roorkee", "logo,canva,photoshop,packaging", 400), ("aman", "Dehradun", "react,css,next.js", 600),
              ("sneha", "Pune", "translation,marathi,content writing", 350), ("rohit", "Haridwar", "video editing,reels,premiere pro", 450)]
         for n, c, s, r in F:

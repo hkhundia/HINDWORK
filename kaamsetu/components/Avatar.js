@@ -1,0 +1,2 @@
+const g=[["#0F5E6B","#4FB3C2"],["#B4560A","#F2B01E"],["#5B3FA0","#9C86E0"],["#1F7A4D","#6CCB91"]];
+export default function Avatar({name,size=48,i=0}){const [a,b]=g[i%4];return(<div style={{width:size,height:size,borderRadius:"50%",background:`linear-gradient(135deg,${a},${b})`,color:"#fff",display:"grid",placeItems:"center",fontWeight:800,fontSize:size/2.3,flex:"none"}}>{name.split(" ").map(w=>w[0]).slice(0,2).join("")}</div>)}
